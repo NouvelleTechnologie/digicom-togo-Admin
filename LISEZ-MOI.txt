@@ -1,0 +1,10 @@
+DIGICOM PRO — VERSION A FICHIERS PLATS POUR GITHUB
+
+1. Décompressez cette archive sur votre téléphone.
+2. Dans le dépôt GitHub destiné au panneau de contrôle, importez TOUS les fichiers à la racine (pas le fichier ZIP lui-même).
+3. Activez GitHub Pages dans Settings > Pages > Deploy from a branch > main > /(root).
+4. Ouvrez index.html via l’adresse GitHub Pages. Les routes utilisent HashRouter (#/admin, #/abonne, etc.).
+
+IMPORTANT : Firebase est configuré pour le projet digicom-togo-6d3ea. Avant publication, vérifiez les règles Firestore et Authentication. Ne rendez jamais les écritures sensibles accessibles à tous. La configuration web Firebase est incluse au code côté client ; protégez les données avec les règles Firebase et les restrictions appropriées.
+
+Ce paquet contient le panneau de contrôle fourni, aplati avec les imports locaux réécrits. Il n’ajoute pas de nouvelle page Acheteur.
