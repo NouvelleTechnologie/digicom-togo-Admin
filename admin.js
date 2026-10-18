@@ -5,8 +5,8 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db, creerCompteAuth } from './firebase.js';
 import { useLive } from './hooks.js';
 import { payerAbonnement, logAction } from './services.js';
-import { ROLES, PLANS, MODES_ABO, COMMISSION_TAUX } from './config.js';
-import { fcfa, dateFr, heureFr, parRecent, messageErreur } from './utils.js';
+import { ROLES, PLANS, MODES_ABO, COMMISSION_TAUX, CATEGORIES } from './config.js';
+import { fcfa, dateFr, heureFr, parRecent, messageErreur, compresserImage, lireDataUrl } from './utils.js';
 import Layout, { Onglets } from './layout.js';
 import { Alerte, Chargement, Vide, CarteCommande } from './ui.js';
 function FormAbo({ plan, setPlan, mode, setMode, ref_, setRef }) {
@@ -117,6 +117,87 @@ function Produits() {
     } };
     return (_jsxs(_Fragment, { children: [_jsx("div", { className: "chips", children: [['en_attente', `À valider (${nb})`], ['valide', 'Validés'], ['refuse', 'Refusés'], ['', 'Tous']].map(([k, l]) => (_jsx("button", { className: filtre === k ? 'on' : '', onClick: () => setFiltre(k), children: l }, k))) }), !liste.length && _jsx(Vide, { children: "Aucun produit dans cette liste." }), liste.map((p) => (_jsxs("div", { className: "carte", children: [_jsxs("div", { className: "item", children: [_jsx("img", { src: p.images?.[0]?.url, alt: "" }), _jsxs("div", { children: [_jsx("b", { children: p.nom }), " ", p.actif === false && _jsx("span", { className: "badge ko", children: "masqu\u00E9" }), _jsx("br", {}), _jsxs("small", { className: "gris", children: [p.abonneNom, " \u00B7 ", fcfa(p.prix), p.prixPromo > 0 ? ' (promo ' + fcfa(p.prixPromo) + ')' : '', " \u00B7 stock ", p.stock] })] })] }), p.description && _jsx("p", { style: { margin: '8px 0' }, children: p.description }), _jsxs("details", { children: [_jsxs("summary", { children: ["Photos (", p.images?.length || 0, ")"] }), _jsx("div", { className: "photos", children: (p.images || []).map((im, i) => _jsx("img", { src: im.url, alt: "" }, i)) })] }), st(p) === 'en_attente' && (_jsxs(_Fragment, { children: [_jsx("label", { children: "Motif du refus (si refus)" }), _jsx("input", { value: motif[p.id] || '', onChange: (e) => setMotif({ ...motif, [p.id]: e.target.value }), placeholder: "Ex. photo floue" }), _jsxs("div", { className: "actions", children: [_jsx("button", { className: "btn", onClick: () => decider(p, 'valide'), children: "\u2714 Valider" }), _jsx("button", { className: "btn rouge", onClick: () => decider(p, 'refuse'), children: "\u2716 Refuser" })] })] })), st(p) !== 'en_attente' && (_jsxs("div", { className: "actions", children: [_jsx("button", { className: "btn mini gris-b", onClick: () => masquer(p), children: p.actif === false ? 'Afficher' : 'Masquer' }), st(p) === 'refuse' && _jsx("button", { className: "btn mini gris-b", onClick: () => decider(p, 'valide'), children: "Valider quand m\u00EAme" }), _jsx("button", { className: "btn mini rouge", onClick: () => suppr(p), children: "Supprimer" })] }))] }, p.id)))] }));
 }
+// Produits partenaires (affiliation AliExpress) : seul l'admin peut les créer
+function Partenaires() {
+    const ps = useLive(() => collection(db, 'produits'));
+    const vide = { nom: '', description: '', categorie: CATEGORIES[0], prix: '', prixPromo: '', lien: '', image: '' };
+    const [f, setF] = useState(vide);
+    const [edit, setEdit] = useState(null);
+    const [fichiers, setFichiers] = useState([]);
+    const [busy, setBusy] = useState(false);
+    const [msg, setMsg] = useState({ t: '', m: '' });
+    if (!ps)
+        return _jsx(Chargement, {});
+    const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+    const httpsOk = (u) => /^https:\/\/[^\s]+$/i.test(String(u).trim());
+    const ouvrir = (p) => {
+        setEdit(p);
+        setFichiers([]);
+        setMsg({ t: '', m: '' });
+        setF({ nom: p.nom || '', description: p.description || '', categorie: p.categorie || CATEGORIES[0], prix: String(p.prix || ''), prixPromo: p.prixPromo > 0 ? String(p.prixPromo) : '', lien: p.lienAffilie || '', image: '' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const annuler = () => { setEdit(null); setFichiers([]); setF(vide); };
+    const enregistrer = async (e) => {
+        e.preventDefault();
+        setMsg({ t: '', m: '' });
+        if (!httpsOk(f.lien))
+            return setMsg({ t: 'err', m: "Le lien d'affiliation doit commencer par https://" });
+        if (f.prixPromo && Number(f.prixPromo) >= Number(f.prix))
+            return setMsg({ t: 'err', m: 'Le prix promo doit être inférieur au prix normal.' });
+        setBusy(true);
+        try {
+            let images = edit?.images || [];
+            const nouvelles = [];
+            if (f.image.trim()) {
+                if (!httpsOk(f.image))
+                    throw new Error("L'adresse de l'image doit commencer par https://");
+                nouvelles.push({ url: f.image.trim(), path: '' });
+            }
+            for (const file of fichiers) {
+                const blob = await compresserImage(file, 700, 0.65);
+                nouvelles.push({ url: await lireDataUrl(blob), path: '' });
+            }
+            if (nouvelles.length)
+                images = nouvelles;
+            if (!images.length)
+                throw new Error('Ajoute au moins une photo (adresse web ou fichier).');
+            if (JSON.stringify(images).length > 900000)
+                throw new Error('Photos trop lourdes : retire une ou deux photos.');
+            const data = {
+                nom: f.nom.trim(), description: f.description.trim(), categorie: f.categorie,
+                prix: Number(f.prix), prixPromo: Number(f.prixPromo) || 0,
+                lienAffilie: f.lien.trim(), images, updatedAt: serverTimestamp(),
+            };
+            if (edit) {
+                await updateDoc(doc(db, 'produits', edit.id), data);
+                logAction('Produit partenaire modifié', data.nom);
+            }
+            else {
+                await addDoc(collection(db, 'produits'), {
+                    ...data, partenaire: true, statut: 'valide', actif: true, stock: 0, vendus: 0,
+                    abonneId: 'partenaire', abonneNom: 'Offre partenaire', createdAt: serverTimestamp(),
+                });
+                logAction('Produit partenaire ajouté', data.nom);
+            }
+            setMsg({ t: 'ok', m: edit ? 'Produit modifié.' : 'Produit publié : il est visible dans la boutique.' });
+            annuler();
+        }
+        catch (x) {
+            setMsg({ t: 'err', m: messageErreur(x) });
+        }
+        setBusy(false);
+    };
+    const masquer = (p) => updateDoc(doc(db, 'produits', p.id), { actif: p.actif === false });
+    const suppr = async (p) => {
+        if (window.confirm('Supprimer ' + p.nom + ' ?')) {
+            await deleteDoc(doc(db, 'produits', p.id));
+            logAction('Produit partenaire supprimé', p.nom);
+        }
+    };
+    const liste = ps.filter((p) => p.partenaire === true).sort(parRecent);
+    return (_jsxs(_Fragment, { children: [_jsxs("form", { className: "carte", onSubmit: enregistrer, children: [_jsx("h2", { children: edit ? 'Modifier le produit partenaire' : 'Nouveau produit partenaire' }), _jsx("label", { children: "Nom du produit" }), _jsx("input", { value: f.nom, onChange: set('nom'), required: true }), _jsx("label", { children: "Description" }), _jsx("textarea", { rows: 3, value: f.description, onChange: set('description') }), _jsx("label", { children: "Cat\u00E9gorie" }), _jsx("select", { value: f.categorie, onChange: set('categorie'), children: CATEGORIES.map((c) => _jsx("option", { value: c, children: c }, c)) }), _jsxs("div", { className: "deux", children: [_jsxs("div", { children: [_jsx("label", { children: "Prix indicatif (F)" }), _jsx("input", { type: "number", min: "1", value: f.prix, onChange: set('prix'), required: true })] }), _jsxs("div", { children: [_jsx("label", { children: "Prix promo (F, facultatif)" }), _jsx("input", { type: "number", min: "0", value: f.prixPromo, onChange: set('prixPromo') })] })] }), _jsx("label", { children: "Lien d'affiliation" }), _jsx("input", { type: "url", value: f.lien, onChange: set('lien'), placeholder: "https://...", required: true }), _jsx("label", { children: edit ? 'Nouvelles photos (remplacent les anciennes)' : 'Photos' }), _jsx("input", { type: "file", accept: "image/*", multiple: true, onChange: (e) => setFichiers([...e.target.files]) }), _jsx("label", { children: "ou adresse web d'une image (facultatif)" }), _jsx("input", { type: "url", value: f.image, onChange: set('image'), placeholder: "https://..." }), _jsx(Alerte, { type: msg.t, children: msg.m }), _jsx("button", { className: "btn plein-l", disabled: busy, children: busy ? 'Enregistrement…' : edit ? 'Enregistrer' : 'Publier le produit' }), edit && _jsx("button", { type: "button", className: "btn plein-l gris-b", onClick: annuler, children: "Annuler" })] }), !liste.length && _jsx(Vide, { children: "Aucun produit partenaire." }), liste.map((p) => (_jsxs("div", { className: "carte", children: [_jsxs("div", { className: "item", children: [_jsx("img", { src: p.images?.[0]?.url, alt: "" }), _jsxs("div", { children: [_jsx("b", { children: p.nom }), " ", p.actif === false && _jsx("span", { className: "badge ko", children: "masqu\u00E9" }), _jsx("br", {}), _jsxs("small", { className: "gris", children: [fcfa(p.prix), p.prixPromo > 0 ? ' (promo ' + fcfa(p.prixPromo) + ')' : '', " \u00B7 ", p.categorie] })] })] }), _jsxs("div", { className: "actions", children: [_jsx("button", { className: "btn mini gris-b", onClick: () => ouvrir(p), children: "Modifier" }), _jsx("a", { className: "btn mini gris-b", style: { textDecoration: 'none' }, href: p.lienAffilie, target: "_blank", rel: "noopener noreferrer", children: "Tester le lien" }), _jsx("button", { className: "btn mini gris-b", onClick: () => masquer(p), children: p.actif === false ? 'Afficher' : 'Masquer' }), _jsx("button", { className: "btn mini rouge", onClick: () => suppr(p), children: "Supprimer" })] })] }, p.id)))] }));
+}
 function Promos() {
     const promos = useLive(() => collection(db, 'promos'));
     const vide = { code: '', type: 'pourcent', valeur: '', min: '', fin: '' };
@@ -187,6 +268,6 @@ function Journal() {
 }
 export default function Admin() {
     const [t, setT] = useState('users');
-    const liste = [['users', 'Utilisateurs'], ['creer', '+ Créer'], ['prod', 'Produits'], ['cmd', 'Commandes'], ['promos', 'Promos'], ['comm', 'Commissions'], ['journal', 'Journal']];
-    return (_jsxs(Layout, { children: [_jsx(Onglets, { actif: t, onChange: setT, liste: liste }), t === 'users' && _jsx(Utilisateurs, {}), t === 'creer' && _jsx(Creer, {}), t === 'prod' && _jsx(Produits, {}), t === 'cmd' && _jsx(Commandes, {}), t === 'promos' && _jsx(Promos, {}), t === 'comm' && _jsx(Commissions, {}), t === 'journal' && _jsx(Journal, {})] }));
+    const liste = [['users', 'Utilisateurs'], ['creer', '+ Créer'], ['prod', 'Produits'], ['part', 'Partenaires'], ['cmd', 'Commandes'], ['promos', 'Promos'], ['comm', 'Commissions'], ['journal', 'Journal']];
+    return (_jsxs(Layout, { children: [_jsx(Onglets, { actif: t, onChange: setT, liste: liste }), t === 'users' && _jsx(Utilisateurs, {}), t === 'creer' && _jsx(Creer, {}), t === 'prod' && _jsx(Produits, {}), t === 'part' && _jsx(Partenaires, {}), t === 'cmd' && _jsx(Commandes, {}), t === 'promos' && _jsx(Promos, {}), t === 'comm' && _jsx(Commissions, {}), t === 'journal' && _jsx(Journal, {})] }));
 }
