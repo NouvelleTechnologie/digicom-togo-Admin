@@ -6,10 +6,6 @@
 <meta name="theme-color" content="#006a4e" />
 <link rel="icon" href="./icon.svg" type="image/svg+xml" />
 <link rel="stylesheet" href="./styles.css" />
-<link rel="manifest" href="./manifest.json" />
-<link rel="apple-touch-icon" href="./icons/icon-192.png" />
-<meta name="theme-color" content="#006a4e" />
-
 <title>DigiCom Pro</title>
 <script type="importmap">
 { "imports": {
@@ -26,13 +22,7 @@
 </head>
 <body>
 <div id="root"><p style="padding:20px;font-family:sans-serif">Chargement…</p></div>
+<script>window.DIGICOM_AI_API_URL = ""; // À remplir avec l’URL HTTPS du serveur IA déployé.</script>
 <script type="module" src="./main.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sw.js').catch(function () {});
-    });
-  }
-</script>
 </body>
 </html>
