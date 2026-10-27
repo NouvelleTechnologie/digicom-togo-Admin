@@ -1,0 +1,24 @@
+DIGICOM TOGO — PAQUET PLAT POUR DÉPLOIEMENT
+
+Tous les fichiers sont à la racine de cette archive : aucun sous-dossier applicatif.
+
+FRONTEND STATIQUE
+- Publier les fichiers de cette archive sur un hébergement statique (GitHub Pages ou Netlify).
+- Le point d’entrée est index.html. La navigation utilise HashRouter, adaptée à l’hébergement statique.
+- Les bibliothèques React et Firebase sont chargées via importmap/CDN. Une connexion Internet est requise.
+- La configuration Firebase actuelle est dans config.js. Vérifiez dans Firebase Console que les domaines d’hébergement sont autorisés et que les règles Firestore/Storage protègent les données.
+
+SERVICE IA (OPTIONNEL, SERVEUR SÉPARÉ)
+- server.js est un backend Node/Express séparé; l’hébergement statique ne l’exécute pas.
+- Pour l’API IA, déployer ce fichier sur un hébergeur Node, configurer OPENAI_API_KEY et FRONTEND_ORIGIN côté serveur, puis renseigner l’URL HTTPS de l’API dans index.html (window.DIGICOM_AI_API_URL).
+- Ne jamais mettre la clé OpenAI dans les fichiers frontend ni dans GitHub.
+- AVANT exposition publique, ajouter vérification Firebase ID token, autorisation par rôle/abonnement, quotas et limitation de débit. Le backend inclus est un exemple et ne doit pas être exposé publiquement sans ces protections.
+
+CONTRÔLES EFFECTUÉS
+- Imports locaux relatifs vérifiés : aucun fichier local manquant détecté.
+- Références CSS, favicon et script principal vérifiées.
+- Syntaxe JavaScript vérifiée avec node --check.
+
+LIMITES
+- Ce paquet est une base de déploiement; il ne constitue pas une preuve que Firebase Auth/Firestore est configuré correctement en production.
+- Les fonctions qui nécessitent des règles Firebase, comptes, autorisations ou secrets doivent être testées sur le projet réel avant utilisation publique.
