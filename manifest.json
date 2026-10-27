@@ -2,7 +2,7 @@
   "name": "DigiCom Togo - Admin",
   "short_name": "DigiCom",
   "description": "Gestion pour commerçants togolais",
-  "start_url": "/digicom-togo-Admin/#/",
+  "start_url": "/",
   "scope": "/digicom-togo-Admin/",
   "display": "standalone",
   "background_color": "#ffffff",
