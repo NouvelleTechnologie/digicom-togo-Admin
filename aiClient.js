@@ -1,7 +1,7 @@
 import { auth } from './firebase.js';
 
 function apiBase() {
-  const configured = window.DIGICOM_AI_API_URL || '';
+  const configured = window.DIGICOM_AI_API_URL || 'https://digicom-togo-admin.onrender.com';
   return String(configured).replace(/\/+$/, '');
 }
 
