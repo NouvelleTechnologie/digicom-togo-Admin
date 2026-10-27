@@ -8,6 +8,17 @@ const port = Number(process.env.PORT || 3000);
 const allowedOrigins = (process.env.FRONTEND_ORIGIN || '')
   .split(',').map(s => s.trim()).filter(Boolean);
 
+const cors = require('cors');
+app.use(cors({
+  origin: '*', // autorise tout le monde
+  methods: ['GET','POST','PUT','DELETE'],
+  allowedHeaders: ['Content-Type','Authorization']
+}));
+
+// Et pour les photos, augmente la taille :
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+  
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
