@@ -4,35 +4,48 @@ import cors from 'cors';
 import OpenAI from 'openai';
 
 const app = express();
-const port = Number(process.env.PORT || 3000);
-const allowedOrigins = (process.env.FRONTEND_ORIGIN || '')
+const port = Number(process.env.PORT || 10000);
+
+// 1. ORIGINES AUTORISÉES
+const envOrigins = (process.env.FRONTEND_ORIGIN || '')
   .split(',').map(s => s.trim()).filter(Boolean);
 
-const cors = require('cors');
+const defaultOrigins = [
+  'https://nouvelletechnologie.github.io',
+  'https://digicom-togo-admin.onrender.com',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultOrigins;
+
+// 2. UN SEUL CORS, BIEN CONFIGURÉ
 app.use(cors({
-  origin: '*', // autorise tout le monde
-  methods: ['GET','POST','PUT','DELETE'],
-  allowedHeaders: ['Content-Type','Authorization']
+  origin: function(origin, callback) {
+    // autorise les requêtes sans origin (comme Postman) et celles de ta liste
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origine non autorisée: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
-// Et pour les photos, augmente la taille :
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
-  
-app.use(cors({
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Origine non autorisée.'));
-  }
-}));
-app.use(express.json({ limit: '18mb' }));
+// 3. Gère le preflight pour les requêtes avec Authorization
+app.options('*', cors());
+
+// 4. LIMITE POUR LES PHOTOS BASE64 - 25MB
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
 const client = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'digicom-ai', configured: Boolean(client) });
+  res.json({ ok: true, service: 'digicom-ai', configured: Boolean(client), allowedOrigins });
 });
 
 app.post('/api/generate-description', async (req, res) => {
@@ -64,13 +77,14 @@ app.post('/api/improve-image', async (req, res) => {
     const { imageDataUrl, prompt } = req.body || {};
     if (typeof imageDataUrl !== 'string' || !/^data:image\/(png|jpeg|jpg|webp);base64,/i.test(imageDataUrl))
       return res.status(400).json({ error: 'Envoyez une image PNG, JPEG ou WebP valide.' });
-    if (imageDataUrl.length > 16 * 1024 * 1024)
+    if (imageDataUrl.length > 20 * 1024 * 1024)
       return res.status(413).json({ error: 'Image trop volumineuse. Choisissez une photo de moins de 12 Mo.' });
 
-    // Ce endpoint utilise l'API d'images. La disponibilité du modèle dépend du compte/API.
+    const imageFile = await dataUrlToFile(imageDataUrl);
+
     const imageResponse = await client.images.edit({
       model: 'gpt-image-1',
-      image: await dataUrlToFile(imageDataUrl),
+      image: imageFile,
       prompt: (typeof prompt === 'string' && prompt.trim() ? prompt.trim() : 'Améliorer la lumière et la netteté de la photo du produit. Préserver le produit réel, sa forme, sa couleur, ses logos et détails. Ne rien ajouter ni retirer.').slice(0, 700),
       size: '1024x1024'
     });
@@ -79,7 +93,7 @@ app.post('/api/improve-image', async (req, res) => {
     return res.json({ imageDataUrl: `data:image/png;base64,${b64}` });
   } catch (e) {
     console.error('improve-image:', e?.message || e);
-    return res.status(500).json({ error: 'Impossible d’améliorer la photo. Vérifiez la disponibilité et les droits du modèle image.' });
+    return res.status(500).json({ error: e?.message || 'Impossible d’améliorer la photo.' });
   }
 });
 
@@ -89,6 +103,7 @@ async function dataUrlToFile(dataUrl) {
   const mime = match[1].toLowerCase().replace('image/jpg', 'image/jpeg');
   const bytes = Buffer.from(match[2], 'base64');
   const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+  // Node 20+ supporte File global
   return new File([bytes], `product.${ext}`, { type: mime });
 }
 
