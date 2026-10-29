@@ -11,7 +11,7 @@ const envOrigins = (process.env.FRONTEND_ORIGIN || '')
   .split(',').map(s => s.trim()).filter(Boolean);
 
 const defaultOrigins = [
-  'https://nouvelletechnologie.github.io',
+  'https://nouvelletechnologie.github.io/digicom-togo-Admin/',
   'https://digicom-togo-admin.onrender.com',
   'http://localhost:5173',
   'http://localhost:3000'
