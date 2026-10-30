@@ -106,5 +106,8 @@ async function dataUrlToFile(dataUrl) {
   // Node 20+ supporte File global
   return new File([bytes], `product.${ext}`, { type: mime });
 }
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true })
+})
 
 app.listen(port, () => console.log(`DigiCom AI écoute sur le port ${port}`));
