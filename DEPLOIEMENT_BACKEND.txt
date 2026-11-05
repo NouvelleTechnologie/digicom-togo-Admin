@@ -1,0 +1,7 @@
+Backend IA DigiCom - Render
+Build: npm install
+Start: npm start
+Variables : OPENAI_API_KEY (secret) ; FRONTEND_ORIGIN=https://nouvelletechnologie.github.io
+Test : /api/health
+Ce service doit être distinct du frontend GitHub Pages.
+Avant production publique, ajouter validation Firebase ID token, contrôle rôle/abonnement et limitation de débit.
