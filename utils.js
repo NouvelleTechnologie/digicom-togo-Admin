@@ -48,15 +48,7 @@ export const messageErreur = (e) => {
     if (c.includes('too-many-requests'))
         return 'Trop de tentatives. Réessaie dans quelques minutes.';
     if (c.includes('network'))
-        return 'Pas de connexion internet. Vérifie les données mobiles ou le Wi-Fi.';
-    if (c.includes('unauthorized-domain'))
-        return 'Domaine non autorisé dans Firebase Authentication. Ajoute nouvelletechnologie.github.io dans les domaines autorisés.';
-    if (c.includes('operation-not-allowed'))
-        return 'La connexion par email/mot de passe n’est pas activée dans Firebase Authentication.';
-    if (c.includes('api-key-not-valid'))
-        return 'La clé API Firebase est invalide. Vérifie config.js.';
-    if (c.includes('project-not-found'))
-        return 'Projet Firebase introuvable. Vérifie projectId dans config.js.';
+        return 'Pas de connexion internet.';
     if (c.includes('email-already-in-use'))
         return 'Cet email est déjà utilisé.';
     if (c.includes('weak-password'))
