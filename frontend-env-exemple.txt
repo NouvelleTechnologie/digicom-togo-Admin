@@ -1,0 +1,2 @@
+# URL HTTPS du backend seulement — jamais de clé API ici.
+VITE_DIGICOM_AI_API_URL=https://votre-backend.example.com

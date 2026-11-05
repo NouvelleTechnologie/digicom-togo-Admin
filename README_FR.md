@@ -1,29 +1,48 @@
-# DigiCom Togo — version corrigée
+# DigiCom-Togo — Module IA vendeur (base solide)
 
-## Déploiement : deux services distincts
+Ce paquet prépare **deux fonctions** dans l'espace vendeur :
+1. Génération d'une description de produit modifiable.
+2. Amélioration de photo avec comparaison original/résultat et validation par le vendeur.
 
-### 1. Frontend GitHub Pages
-Publier à la racine du dépôt GitHub Pages les fichiers du paquet `DigiCom_FRONTEND_CORRIGE.zip`.
-Le point d'entrée est `index.html`. La navigation utilise `HashRouter`.
+## Important : limites de l'environnement actuel
+- GitHub Pages héberge uniquement le frontend statique. Il ne peut pas garder une clé OpenAI secrète ni exécuter ce backend Node.
+- Le frontend fonctionne sans backend pour choisir une image, afficher l'original et préparer l'aperçu, mais le traitement IA réel nécessite un endpoint backend.
+- Aucune clé secrète n'est incluse. N'en ajoutez jamais dans les fichiers du frontend ou dans GitHub.
+- Ce paquet est un module autonome d'intégration, pas un remplacement complet de l'application DigiCom ni un ZIP déjà fusionné avec le site publié.
+- Le backend exemple ci-joint n'est pas encore prêt à être exposé publiquement : il faut ajouter vérification Firebase ID token, contrôle d'abonnement, quotas et limitation de débit avant la production.
 
-### 2. Backend IA Render (facultatif)
-Le fichier `server.js` et `package.json` constituent un service Node séparé. Les publier dans un service Render distinct, avec la commande `npm start`, puis configurer `OPENAI_API_KEY` et `FRONTEND_ORIGIN=https://nouvelletechnologie.github.io`.
+## Fichiers
+- `frontend/DigiComAssistantIA.jsx` : composant React complet avec génération de description, sélection d'image, comparaison, acceptation/refus et messages d'erreur.
+- `frontend/digicom-assistant-ia.css` : interface responsive.
+- `frontend/aiClient.js` : appels au backend, sans clé secrète.
+- `frontend/.env.example` : URL publique du backend seulement.
+- `backend/server.js` : exemple d'API Node.js pour descriptions et traitement image OpenAI.
+- `backend/package.json` : dépendances backend.
+- `backend/.env.example` : emplacement local/serveur de la clé secrète.
+- `docs/INTEGRATION.md` : instructions de raccordement au formulaire abonné.
 
-L'URL du backend IA doit être renseignée dans `index.html` à `window.DIGICOM_AI_API_URL`. Ne pas utiliser l'URL du frontend à cet endroit. Une URL IA incorrecte ne doit pas empêcher la connexion Firebase.
+## Intégration React
+Importer `DigiComAssistantIA` et lui fournir :
+- `nom`, `prix`, `categorie` ;
+- `description` et `onDescriptionChange` ;
+- `onImageReady(file, dataUrl)` appelé quand le vendeur accepte l'image améliorée.
 
-## Corrections importantes
-- Firestore utilise maintenant la base standard `(default)` avec `getFirestore(app)`.
-- Suppression du manifeste mal nommé `manifest (1).json`; remplacement par `manifest.json` et chemins relatifs adaptés à GitHub Pages.
-- Suppression de la route `/api/health` en double dans le backend.
-- CORS normalisé pour l'origine GitHub Pages (l'en-tête Origin ne contient pas le chemin du dépôt).
-- Gestion plus explicite des erreurs Firebase et des erreurs de connexion au backend IA.
-- Protection contre les réponses asynchrones obsolètes lors du chargement du profil.
+Le composant est volontairement indépendant afin de pouvoir l'insérer dans `FormProduit`. Les noms des états sont à adapter au code source réel.
 
-## Vérifications restant à faire sur les services réels
-Le code seul ne permet pas de confirmer les réglages de la console Firebase, les règles Firestore, les comptes utilisateurs ni les variables Render. Vérifier notamment :
-- Firebase Authentication : connexion par e-mail/mot de passe activée.
-- Firebase Authentication > domaines autorisés : `nouvelletechnologie.github.io`.
-- Firestore Database : base `(default)` créée et règles autorisant le profil `users/{uid}` au compte concerné.
-- Render : le backend IA est un service séparé, démarré et accessible en HTTPS.
+## Variables frontend
+Dans `.env` de l'application Vite, ajouter :
+`VITE_DIGICOM_AI_API_URL=https://votre-backend.example.com`
 
-Le backend IA fourni est une base fonctionnelle, mais ne doit pas être ouvert au public en production sans validation Firebase des jetons, contrôle du rôle/abonnement et limitation de débit.
+C'est uniquement l'URL du backend. **Ne mettez jamais `OPENAI_API_KEY` dans Vite ou dans GitHub Pages.**
+
+## Backend
+Dans le dossier `backend` :
+1. `npm install`
+2. Copier `.env.example` en `.env` sur un environnement serveur privé.
+3. Définir `OPENAI_API_KEY`, `FRONTEND_ORIGIN` et `OPENAI_MODEL`.
+4. `npm start`
+
+Le backend de démonstration est bloqué par défaut si la clé manque. Avant tout déploiement public, ajoutez l'authentification Firebase et les contrôles anti-abus.
+
+## Fonctionnement sans hébergement
+Sans backend, l'interface reste utilisable pour sélectionner et comparer des images, mais les boutons IA afficheront un message explicatif. Les transformations IA réelles ne peuvent pas être exécutées uniquement par GitHub Pages de façon sûre.

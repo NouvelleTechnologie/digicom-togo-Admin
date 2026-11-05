@@ -1,0 +1,24 @@
+{
+  "name": "DigiCom Togo - Admin",
+  "short_name": "DigiCom",
+  "description": "Gestion pour commerçants togolais",
+  "start_url": "/digicom-togo-Admin/#/",
+  "scope": "/digicom-togo-Admin/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#006A4E",
+  "icons": [
+    {
+      "src": "/digicom-togo-Admin/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/digicom-togo-Admin/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

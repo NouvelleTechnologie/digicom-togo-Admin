@@ -1,9 +1,8 @@
 {
   "name": "digicom-togo-ai-service",
-  "version": "0.3.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
   "scripts": { "start": "node server.js" },
   "dependencies": {
     "cors": "^2.8.5",
