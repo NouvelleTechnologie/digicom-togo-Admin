@@ -20,6 +20,7 @@ const originesEnv = (process.env.FRONTEND_ORIGIN || '')
   .split(',').map((value) => normaliserOrigine(value.trim())).filter(Boolean);
 const originesDefaut = [
   'https://nouvelletechnologie.github.io',
+  'https://serveur-ia-cx4f.onrender.com/',
   'https://digicom-togo-admin.onrender.com',
   'http://localhost:5173',
   'http://localhost:3000'
