@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "DigiCom Togo — Administration",
+  "short_name": "DigiCom",
+  "description": "Gestion des vendeurs, produits, commandes, livraisons et statistiques DigiCom Togo.",
+  "lang": "fr-TG",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#006a4e",
+  "categories": ["business", "shopping", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

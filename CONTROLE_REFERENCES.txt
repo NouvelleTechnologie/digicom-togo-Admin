@@ -1,0 +1,58 @@
+AUDIT TECHNIQUE DIGICOM — 6 NOVEMBRE 2026
+
+ARCHITECTURE
+- Frontend statique React/Firebase, compatible GitHub Pages.
+- Backend IA Node.js/Express distinct, à déployer comme service Web Render.
+- Tous les fichiers sont à la racine du dossier Digicom ; aucun sous-dossier applicatif.
+
+CAUSE CRITIQUE DE LA PANNE DE CONNEXION REPÉRÉE DANS LES SOURCES
+- L'ancienne version fonctionnelle initialisait Firestore avec getFirestore(app, 'default').
+- La révision intermédiaire avait remplacé cette base par getFirestore(app), qui cible '(default)'.
+- Il s'agit de deux identifiants de base différents. Si les comptes et profils DigiCom sont dans la base nommée 'default', la nouvelle version lit une base différente et ne retrouve pas users/{uid}.
+- La valeur historique 'default' est donc restaurée dans config.js. Le backend Admin SDK utilise également FIRESTORE_DATABASE_ID=default afin de contrôler les mêmes profils et abonnements.
+
+CORRECTIONS IA
+- CORS : les domaines sont comparés sous forme d'origine (schéma + hôte + port), jamais avec le chemin GitHub Pages.
+- Client IA : suppression des anciennes URL de secours ; une URL HTTPS explicite du backend dédié est exigée.
+- Backend : une seule route /api/health ; authentification du jeton Firebase ; validation du rôle abonne et de l'abonnement actif ; limites de requêtes.
+- Image : correction du type MIME complet image/png, image/jpeg et image/webp ; prise en charge du modèle d'édition actuel gpt-image-2.5-sunburst au lieu de gpt-image-1.
+- Délais d'attente distincts pour génération de texte et retouche photo.
+
+CORRECTIONS PWA
+- Le manifeste anciennement nommé « manifest (1).json » est remplacé par « manifest.json ».
+- Le manifeste est référencé depuis index.html ; chemins relatifs compatibles avec le dépôt GitHub Pages.
+- Trois icônes PNG existent et leurs références sont valides (192x192, 512x512 et maskable 512x512).
+- Service Worker enregistré explicitement ; cache versionné en v4 pour éviter de conserver les anciens fichiers.
+
+STATISTIQUES
+- Filtres mensuel et annuel.
+- État global exportable en HTML, CSV ou impression/PDF.
+- Statistiques individuelles par vendeur exportables en HTML, CSV ou impression/PDF.
+- Les ventes sont agrégées à partir des commandes marquées « livree » et de leurs lignes produits.
+- Les reversements sont rapprochés des commissions cumulées ; les rapports précisent qu'il s'agit d'états internes, pas de justificatifs de paiement.
+
+DOUBLONS ET RÉCUPÉRATION DES INFORMATIONS
+- Le CSS IA séparé a été retiré seulement après vérification que toutes ses règles étaient déjà présentes dans styles.css.
+- Les anciens guides et notes ont été fusionnés dans README_FR.md avant leur retrait.
+- Le fichier gitignore.txt a été renommé .gitignore.
+- Les anciens manifestes dupliqués/mal nommés ont été remplacés par un seul manifest.json.
+- DigiComAssistantIA.js est conservé car abonne.js l'importe réellement.
+
+CONTRÔLES STATIQUES EFFECTUÉS
+- Syntaxe : 20 fichiers JavaScript vérifiés avec node --check.
+- manifest.json et package.json : JSON valides.
+- Imports JavaScript locaux : aucune référence manquante détectée.
+- Références HTML, icônes du manifeste et shell du Service Worker : aucune référence manquante détectée.
+- Doublons identiques octet par octet dans le dossier final : aucun.
+- La dépendance backend est configurée pour Node.js 22+.
+
+À VALIDER APRÈS DÉPLOIEMENT
+- Vérifier que le backend Render utilise bien FIRESTORE_DATABASE_ID=default et le compte de service Firebase du projet.
+- Vérifier /api/health : openaiConfigured, firebaseAdminConfigured et configured doivent être true.
+- Renseigner dans index.html l'URL HTTPS du service IA Render dédié (pas l'URL du site d'administration).
+- Tester la connexion administrateur, un compte abonné actif, la génération de texte et le traitement d'une image.
+- Ouvrir manifest.json dans PWA Builder après publication HTTPS.
+
+LIMITES
+- Aucun compte ou secret privé n'a été utilisé.
+- Les contrôles réels Firebase, Render, OpenAI et PWA Builder ne peuvent être confirmés depuis une archive locale ; ils nécessitent le déploiement et les comptes actifs.

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#006a4e" />
+  <meta name="description" content="DigiCom Togo — gestion des vendeurs, commandes et livraisons." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./styles.css" />
+  <title>DigiCom Togo — Administration</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime?external=react",
+      "react-dom": "https://esm.sh/react-dom@18.3.1?external=react",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?external=react",
+      "react-router-dom": "https://esm.sh/react-router-dom@6.26.2?external=react,react-dom",
+      "firebase/app": "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js",
+      "firebase/firestore": "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js",
+      "firebase/storage": "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js"
+    }
+  }
+  </script>
+  <script>
+    // À remplir après déploiement du backend IA dédié sur Render.
+    // Ne pas mettre ici l'URL du site d'administration ni une clé OpenAI.
+    window.DIGICOM_AI_API_URL = '';
+  </script>
+</head>
+<body>
+  <div id="root"><p style="padding:20px;font-family:sans-serif">Chargement de DigiCom…</p></div>
+  <noscript>Active JavaScript pour utiliser DigiCom.</noscript>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
