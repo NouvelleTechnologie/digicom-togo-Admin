@@ -44,17 +44,17 @@ let adminApp = null;
 let adminAuth = null;
 let adminDb = null;
 try {
-  const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if (rawServiceAccount) {
-    const account = JSON.parse(rawServiceAccount);
-    if (account.private_key) account.private_key = account.private_key.replace(/\\n/g, '\n');
-    adminApp = getAdminApps().find((item) => item.name === 'digicom-admin')
-      || initializeAdminApp({ credential: cert(account), projectId: PROJECT_ID }, 'digicom-admin');
-    adminAuth = getAdminAuth(adminApp);
-    adminDb = FIRESTORE_DATABASE_ID === '(default)'
-      ? getAdminFirestore(adminApp)
-      : getAdminFirestore(adminApp, FIRESTORE_DATABASE_ID);
+  let rawServiceAccount = (process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '').trim();
+  // Si Render a ajouté des guillemets autour, on les enlève
+  if (rawServiceAccount.startsWith('"') && rawServiceAccount.endsWith('"')) {
+    rawServiceAccount = JSON.parse(rawServiceAccount);
   }
+  if (rawServiceAccount) {
+    // Répare les vrais retours à la ligne dans private_key (le bug du téléphone)
+    let fixed = rawServiceAccount.replace(/"private_key":\s*"([\s\S]*?)"/, (m, k) => {
+      return '"private_key":"' + k.replace(/\n/g, '\\n').replace(/\r/g, '') + '"';
+    });
+    const account = JSON.parse(fixed);
 } catch (error) {
   console.error('Firebase Admin non initialisé :', error?.message || error);
 }
