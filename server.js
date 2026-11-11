@@ -9,10 +9,8 @@ import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 const app = express();
 const port = Number(process.env.PORT || 10000);
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'digicom-togo-6d3ea';
-// Doit correspondre à FIRESTORE_DATABASE_ID dans config.js (ancienne base DigiCom : 'default').
-const FIRESTORE_DATABASE_ID = process.env.FIRESTORE_DATABASE_ID || 'default';
+const FIRESTORE_DATABASE_ID = process.env.FIRESTORE_DATABASE_ID || '(default)';
 
-// GitHub Pages transmet uniquement l'origine (sans le chemin du dépôt).
 function normaliserOrigine(value) {
   try { return new URL(value).origin; } catch { return ''; }
 }
@@ -39,22 +37,49 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '22mb' }));
 app.disable('x-powered-by');
 
-// Firebase Admin : le secret de compte de service reste exclusivement sur Render.
+// Firebase Admin - version tolérante au copier-coller téléphone
 let adminApp = null;
 let adminAuth = null;
 let adminDb = null;
-try {
-  let rawServiceAccount = (process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '').trim();
-  // Si Render a ajouté des guillemets autour, on les enlève
-  if (rawServiceAccount.startsWith('"') && rawServiceAccount.endsWith('"')) {
-    rawServiceAccount = JSON.parse(rawServiceAccount);
+
+function parserServiceAccount(raw) {
+  let text = (raw || '').trim();
+  if (!text) return null;
+  // Si Render a ajouté des guillemets autour de tout le JSON
+  if (text.startsWith('"') && text.endsWith('"')) {
+    try { text = JSON.parse(text); } catch {}
   }
-  if (rawServiceAccount) {
-    // Répare les vrais retours à la ligne dans private_key (le bug du téléphone)
-    let fixed = rawServiceAccount.replace(/"private_key":\s*"([\s\S]*?)"/, (m, k) => {
-      return '"private_key":"' + k.replace(/\n/g, '\\n').replace(/\r/g, '') + '"';
-    });
-    const account = JSON.parse(fixed);
+  // Répare les vrais retours à la ligne dans private_key
+  const fixed = text.replace(/"private_key":\s*"([\s\S]*?)"/, (m, k) => {
+    return '"private_key":"' + k.replace(/\r/g, '').replace(/\n/g, '\\n') + '"';
+  });
+  const account = JSON.parse(fixed);
+  if (account.private_key) account.private_key = account.private_key.replace(/\\n/g, '\n');
+  return account;
+}
+
+try {
+  let account = null;
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    account = parserServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  } else if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    account = {
+      project_id: PROJECT_ID,
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    };
+  }
+  if (account) {
+    adminApp = getAdminApps().find((item) => item.name === 'digicom-admin')
+      || initializeAdminApp({ credential: cert(account), projectId: PROJECT_ID }, 'digicom-admin');
+    adminAuth = getAdminAuth(adminApp);
+    adminDb = FIRESTORE_DATABASE_ID === '(default)'
+      ? getAdminFirestore(adminApp)
+      : getAdminFirestore(adminApp, FIRESTORE_DATABASE_ID);
+    console.log('Firebase Admin OK');
+  } else {
+    console.log('Firebase Admin : aucune clé trouvée');
+  }
 } catch (error) {
   console.error('Firebase Admin non initialisé :', error?.message || error);
 }
@@ -100,7 +125,6 @@ async function verifierAbonne(req, res, next) {
   }
 }
 
-// Limitation locale simple pour réduire les abus (à compléter par un quota durable si nécessaire).
 const appels = new Map();
 function limiterIA(maximum, fenetreMs = 10 * 60 * 1000) {
   return (req, res, next) => {
