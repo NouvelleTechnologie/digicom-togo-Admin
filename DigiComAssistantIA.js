@@ -7,6 +7,7 @@ export default function DigiComAssistantIA({
   nom = '', prix = '', categorie = '', description = '',
   onDescriptionChange = () => {}, onImageReady = () => {}
 }) {
+  const [iaOuvert, setIaOuvert] = useState(false);
   const [details, setDetails] = useState('');
   const [busyText, setBusyText] = useState(false);
   const [busyImage, setBusyImage] = useState(false);
@@ -17,6 +18,7 @@ export default function DigiComAssistantIA({
   const [originalUrl, setOriginalUrl] = useState('');
   const [resultUrl, setResultUrl] = useState('');
   const [resultFile, setResultFile] = useState(null);
+  const [descriptionProposee, setDescriptionProposee] = useState('');
   const [imagePrompt, setImagePrompt] = useState('Améliorer l’éclairage et la netteté. Préserver strictement le produit réel, sa forme, sa couleur, son logo et ses détails. Ne rien ajouter ni retirer.');
   const inputRef = useRef(null);
   useEffect(() => () => {
@@ -43,10 +45,18 @@ export default function DigiComAssistantIA({
     try {
       const result = await genererDescriptionIA({ nom, prix, categorie, details });
       if (!result.description?.trim()) throw new Error('Aucune description reçue.');
-      onDescriptionChange(result.description.trim());
-      setNotice('Description proposée. Relisez-la avant de l’enregistrer.');
+      // NOUVEAU : on ne déploie plus tout de suite, on met en aperçu
+      setDescriptionProposee(result.description.trim());
+      setNotice('Description proposée. Relisez-la, puis cliquez sur Déployer.');
     } catch (error) { setErrorText(error?.message || 'Impossible de générer la description.'); }
     finally { setBusyText(false); }
+  }
+  function deployerDescription() {
+    if (!descriptionProposee.trim()) return;
+    onDescriptionChange(descriptionProposee.trim());
+    setNotice('Description déployée dans l’annonce !');
+    setDescriptionProposee('');
+    setIaOuvert(false);
   }
   async function ameliorerPhoto() {
     setErrorImage(''); setNotice('');
@@ -59,16 +69,25 @@ export default function DigiComAssistantIA({
       const file = new File([blob], `digicom-amelioree-${Date.now()}.png`, { type: blob.type || 'image/png' });
       if (resultUrl) URL.revokeObjectURL(resultUrl);
       setResultFile(file); setResultUrl(URL.createObjectURL(file));
-      setNotice('Aperçu prêt. Comparez les images avant de choisir.');
+      setNotice('Aperçu prêt. Comparez les images avant de déployer.');
     } catch (error) { setErrorImage(error?.message || 'Impossible d’améliorer cette photo.'); }
     finally { setBusyImage(false); }
   }
-  function accepterPhoto() {
+  function deployerPhoto() {
     if (!resultFile || !resultUrl) return;
     onImageReady(resultFile, resultUrl);
-    setNotice('Photo ajoutée au formulaire. Enregistrez ensuite le produit.');
+    setNotice('Photo déployée dans l’annonce !');
+    setResultFile(null); setResultUrl('');
+    setIaOuvert(false);
+  }
+  // --- BOUTON UTILISER IA : toute l'IA est cachée derrière ---
+  if (!iaOuvert) {
+    return hs('div', { className: 'digicom-ai', children: [
+      h('button', { type: 'button', className: 'digicom-ai__button', style: { width: '100%', background: '#7c3aed', color: '#fff', padding: 12, borderRadius: 10, fontWeight: 'bold' }, onClick: () => setIaOuvert(true), children: '✨ Utiliser IA ▼' })
+    ]});
   }
   return hs('section', { className: 'digicom-ai', 'aria-label': 'Assistant IA DigiCom', children: [
+    h('button', { type: 'button', className: 'digicom-ai__button', style: { width: '100%', background: '#f3f4f6', color: '#111', marginBottom: 10 }, onClick: () => setIaOuvert(false), children: 'Fermer IA ▲' }),
     hs('header', { className: 'digicom-ai__header', children: [
       h('span', { className: 'digicom-ai__spark', 'aria-hidden': true, children: '✦' }),
       hs('div', { children: [h('h3', { children: 'Assistant IA DigiCom' }), h('p', { children: 'Préparez votre fiche produit sans quitter l’espace vendeur.' })] })
@@ -79,7 +98,13 @@ export default function DigiComAssistantIA({
       h('label', { htmlFor: 'digicom-ai-details', children: 'Informations confirmées (facultatif)' }),
       h('textarea', { id: 'digicom-ai-details', rows: 3, maxLength: 1200, value: details, onChange: e => setDetails(e.target.value), placeholder: 'Couleur, taille, état neuf ou occasion, contenu du paquet…' }),
       h('button', { type: 'button', className: 'digicom-ai__button', onClick: genererTexte, disabled: busyText, children: busyText ? 'Génération…' : 'Générer la description' }),
-      errorText && h('p', { className: 'digicom-ai__error', role: 'alert', children: errorText })
+      errorText && h('p', { className: 'digicom-ai__error', role: 'alert', children: errorText }),
+      descriptionProposee && hs('div', { style: { marginTop: 10, background: '#f0fdf4', padding: 10, borderRadius: 10 }, children: [
+        h('b', { children: 'Aperçu :' }),
+        h('p', { style: { whiteSpace: 'pre-wrap' }, children: descriptionProposee }),
+        h('button', { type: 'button', className: 'digicom-ai__button', style: { background: '#16a34a', color: '#fff', width: '100%', marginTop: 8 }, onClick: deployerDescription, children: '✅ Déployer dans l’annonce' }),
+        h('button', { type: 'button', className: 'digicom-ai__button', onClick: () => setDescriptionProposee(''), children: 'Effacer' })
+      ]})
     ]}),
     hs('section', { className: 'digicom-ai__section', children: [
       h('h4', { children: '🖼️ Amélioration de photo' }),
@@ -92,7 +117,7 @@ export default function DigiComAssistantIA({
         originalUrl && hs('div', { children: [h('b', { children: 'Originale' }), h('img', { src: originalUrl, alt: 'Photo originale du produit' })] }),
         resultUrl && hs('div', { children: [h('b', { children: 'Résultat IA' }), h('img', { src: resultUrl, alt: 'Photo proposée par l’IA' })] })
       ]}),
-      resultFile && h('button', { type: 'button', className: 'digicom-ai__button digicom-ai__button--accept', onClick: accepterPhoto, children: 'Utiliser cette photo' }),
+      resultFile && h('button', { type: 'button', className: 'digicom-ai__button digicom-ai__button--accept', style: { background: '#16a34a', color: '#fff', width: '100%' }, onClick: deployerPhoto, children: '✅ Déployer dans l’annonce' }),
       errorImage && h('p', { className: 'digicom-ai__error', role: 'alert', children: errorImage })
     ]}),
     notice && h('p', { className: 'digicom-ai__notice', role: 'status', children: notice })
