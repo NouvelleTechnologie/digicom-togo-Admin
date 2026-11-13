@@ -16,6 +16,7 @@ function normaliserOrigine(value) {
 }
 const originesEnv = (process.env.FRONTEND_ORIGIN || '')
   .split(',').map((value) => normaliserOrigine(value.trim())).filter(Boolean);
+const API_URL = 'https://serveur-ia3-wnw4.onrender.com';
 const originesDefaut = [
   'https://nouvelletechnologie.github.io',
   'https://serveur-ia3-wnw4.onrender.com',
