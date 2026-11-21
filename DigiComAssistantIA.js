@@ -19,7 +19,21 @@ export default function DigiComAssistantIA({
   const [resultUrl, setResultUrl] = useState('');
   const [resultFile, setResultFile] = useState(null);
   const [descriptionProposee, setDescriptionProposee] = useState('');
-  const [imagePrompt, setImagePrompt] = useState('Améliorer l’éclairage et la netteté. Préserver strictement le produit réel, sa forme, sa couleur, son logo et ses détails. Ne rien ajouter ni retirer.');
+  const [imagePrompt, setImagePrompt] = useState('Agis comme un expert en photographie publicitaire, marketing et design e-commerce.
+
+À partir de la photo que je t'envoie, transforme le produit en une publicité visuellement exceptionnelle, professionnelle, réaliste et prête à être publiée sur un site de vente ou les réseaux sociaux.
+
+Identifie automatiquement le produit, puis adapte le décor, l'éclairage, les couleurs, les effets visuels, la composition et le style publicitaire à sa nature, qu'il soit brut, transformé, alimentaire, artisanal, naturel, industriel ou non alimentaire.
+
+Mets en valeur le produit avec un rendu premium, une lumière maîtrisée, une netteté remarquable, un arrière-plan élégant et des effets spéciaux subtils. Valorise particulièrement les produits locaux avec une touche moderne, authentique et attractive.
+
+Préserve impérativement le produit réel : sa forme, sa couleur, sa texture, ses proportions, son logo, son emballage et ses détails. Ne le déforme pas et ne le remplace pas.
+
+Ajoute intelligemment, si pertinent, un titre accrocheur, le nom du produit, quelques avantages, un slogan et une touche commerciale élégante. N'invente aucun prix, logo, certification ou caractéristique.
+
+Le produit doit rester le centre d'attention. Évite les designs surchargés et les textes inutiles.
+
+Résultat attendu : une image publicitaire haut de gamme, captivante, crédible, esthétique et conçue pour donner envie d'acheter. Tu es libre de choisir la meilleure direction artistique pour chaque produit, sans me demander de précisions.');
   const inputRef = useRef(null);
   useEffect(() => () => {
     if (originalUrl) URL.revokeObjectURL(originalUrl);
