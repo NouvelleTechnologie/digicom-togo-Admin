@@ -7,7 +7,7 @@ import { useAuth } from './authcontext.js';
 import { useLive } from './hooks.js';
 import { CATEGORIES, STOCKAGE_PHOTOS, CLOUDINARY, COMMISSION_TAUX, STOCK_BAS } from './config.js';
 import { logAction } from './services.js';
-import { fcfa, dateFr, parRecent, compresserImage, lireDataUrl, messageErreur, toDate } from './utils.js';
+import { fcfa, dateFr, parRecent, compresserImage, lireDataUrl, messageErreur } from './utils.js';
 import Layout, { Onglets } from './layout.js';
 import DigiComAssistantIA from './DigiComAssistantIA.js';
 import { Alerte, Chargement, Vide, CarteCommande } from './ui.js';
@@ -18,18 +18,18 @@ function FormProduit({ initial, onDone }) {
         nom: initial?.nom || '', description: initial?.description || '', prix: initial?.prix ?? '',
         stock: initial?.stock ?? '', categorie: initial?.categorie || CATEGORIES[0],
         prixPromo: initial?.prixPromo || '',
-        promoFin: toDate(initial?.promoFin)?.toISOString().slice(0, 10) || '',
+        promoFin: initial?.promoFin ? initial.promoFin.toDate().toISOString().slice(0, 10) : '',
     });
     const [anciennes, setAnciennes] = useState(initial?.images || []);
+    const [retirees, setRetirees] = useState([]);
     const [nouvelles, setNouvelles] = useState([]); // {file, url}
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState('');
     const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
     const choisir = (e) => {
         const fichiers = Array.from(e.target.files || []);
-        const place = Math.max(0, MAX_PHOTOS - anciennes.length - nouvelles.length);
-        const selection = fichiers.slice(0, place).filter((file) => file.type?.startsWith('image/'));
-        setNouvelles((old) => [...old, ...selection.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+        const place = MAX_PHOTOS - anciennes.length - nouvelles.length;
+        setNouvelles([...nouvelles, ...fichiers.slice(0, place).map((file) => ({ file, url: URL.createObjectURL(file) }))]);
         e.target.value = '';
     };
     const enregistrer = async (e) => {
@@ -85,7 +85,7 @@ function FormProduit({ initial, onDone }) {
         }
         setBusy(false);
     };
-    return (_jsxs("form", { className: "carte", onSubmit: enregistrer, children: [_jsx("h2", { children: initial ? 'Modifier le produit' : 'Nouveau produit' }), _jsx("label", { children: "Nom du produit" }), _jsx("input", { value: f.nom, onChange: set('nom'), required: true }), _jsx("label", { children: "Description" }), _jsx("textarea", { value: f.description, onChange: set('description') }), _jsx(DigiComAssistantIA, { nom: f.nom, prix: f.prix, categorie: f.categorie, description: f.description, onDescriptionChange: (description) => setF((old) => ({ ...old, description })), onImageReady: (file, url) => setNouvelles((old) => old.length + anciennes.length < MAX_PHOTOS ? [...old, { file, url }] : old) }), _jsxs("div", { className: "deux", children: [_jsxs("div", { children: [_jsx("label", { children: "Prix (F)" }), _jsx("input", { type: "number", min: "0", inputMode: "numeric", value: f.prix, onChange: set('prix'), required: true })] }), _jsxs("div", { children: [_jsx("label", { children: "Stock" }), _jsx("input", { type: "number", min: "0", inputMode: "numeric", value: f.stock, onChange: set('stock'), required: true })] })] }), _jsxs("div", { className: "deux", children: [_jsxs("div", { children: [_jsx("label", { children: "Prix promo (F) \u2014 optionnel" }), _jsx("input", { type: "number", min: "0", inputMode: "numeric", value: f.prixPromo, onChange: set('prixPromo') })] }), _jsxs("div", { children: [_jsx("label", { children: "Promo jusqu'au" }), _jsx("input", { type: "date", value: f.promoFin, onChange: set('promoFin') })] })] }), _jsx("label", { children: "Cat\u00E9gorie" }), _jsx("select", { value: f.categorie, onChange: set('categorie'), children: CATEGORIES.map((c) => _jsx("option", { children: c }, c)) }), _jsxs("label", { children: ["Photos (", anciennes.length + nouvelles.length, "/", MAX_PHOTOS, ") \u2014 la 1re est la photo principale"] }), _jsxs("div", { className: "photos", children: [anciennes.map((im, i) => (_jsxs("div", { className: "ph", children: [_jsx("img", { src: im.url, alt: "" }), _jsx("button", { type: "button", className: "x", onClick: () => { setAnciennes(anciennes.filter((_, k) => k !== i));  }, children: "\u00D7" })] }, i))), nouvelles.map((n, i) => (_jsxs("div", { className: "ph", children: [_jsx("img", { src: n.url, alt: "" }), _jsx("button", { type: "button", className: "x", onClick: () => setNouvelles(nouvelles.filter((_, k) => k !== i)), children: "\u00D7" })] }, n.url)))] }), anciennes.length + nouvelles.length < MAX_PHOTOS && _jsx("input", { type: "file", accept: "image/*", multiple: true, onChange: choisir }), _jsx(Alerte, { children: err }), _jsx("button", { className: "btn plein-l", disabled: busy, children: busy ? 'Envoi des photos…' : 'Enregistrer' }), _jsx("button", { type: "button", className: "btn plein-l gris-b", onClick: onDone, disabled: busy, children: "Annuler" })] }));
+    return (_jsxs("form", { className: "carte", onSubmit: enregistrer, children: [_jsx("h2", { children: initial ? 'Modifier le produit' : 'Nouveau produit' }), _jsx("label", { children: "Nom du produit" }), _jsx("input", { value: f.nom, onChange: set('nom'), required: true }), _jsx("label", { children: "Description" }), _jsx("textarea", { value: f.description, onChange: set('description') }), _jsx(DigiComAssistantIA, { nom: f.nom, prix: f.prix, categorie: f.categorie, description: f.description, onDescriptionChange: (description) => setF((old) => ({ ...old, description })), onImageReady: (file, url) => setNouvelles((old) => [...old, { file, url }].slice(0, MAX_PHOTOS - anciennes.length)) }), _jsxs("div", { className: "deux", children: [_jsxs("div", { children: [_jsx("label", { children: "Prix (F)" }), _jsx("input", { type: "number", min: "0", inputMode: "numeric", value: f.prix, onChange: set('prix'), required: true })] }), _jsxs("div", { children: [_jsx("label", { children: "Stock" }), _jsx("input", { type: "number", min: "0", inputMode: "numeric", value: f.stock, onChange: set('stock'), required: true })] })] }), _jsxs("div", { className: "deux", children: [_jsxs("div", { children: [_jsx("label", { children: "Prix promo (F) \u2014 optionnel" }), _jsx("input", { type: "number", min: "0", inputMode: "numeric", value: f.prixPromo, onChange: set('prixPromo') })] }), _jsxs("div", { children: [_jsx("label", { children: "Promo jusqu'au" }), _jsx("input", { type: "date", value: f.promoFin, onChange: set('promoFin') })] })] }), _jsx("label", { children: "Cat\u00E9gorie" }), _jsx("select", { value: f.categorie, onChange: set('categorie'), children: CATEGORIES.map((c) => _jsx("option", { children: c }, c)) }), _jsxs("label", { children: ["Photos (", anciennes.length + nouvelles.length, "/", MAX_PHOTOS, ") \u2014 la 1re est la photo principale"] }), _jsxs("div", { className: "photos", children: [anciennes.map((im, i) => (_jsxs("div", { className: "ph", children: [_jsx("img", { src: im.url, alt: "" }), _jsx("button", { type: "button", className: "x", onClick: () => { setAnciennes(anciennes.filter((_, k) => k !== i)); setRetirees([...retirees, im]); }, children: "\u00D7" })] }, i))), nouvelles.map((n, i) => (_jsxs("div", { className: "ph", children: [_jsx("img", { src: n.url, alt: "" }), _jsx("button", { type: "button", className: "x", onClick: () => setNouvelles(nouvelles.filter((_, k) => k !== i)), children: "\u00D7" })] }, n.url)))] }), anciennes.length + nouvelles.length < MAX_PHOTOS && _jsx("input", { type: "file", accept: "image/*", multiple: true, onChange: choisir }), _jsx(Alerte, { children: err }), _jsx("button", { className: "btn plein-l", disabled: busy, children: busy ? 'Envoi des photos…' : 'Enregistrer' }), _jsx("button", { type: "button", className: "btn plein-l gris-b", onClick: onDone, disabled: busy, children: "Annuler" })] }));
 }
 function MesProduits() {
     const { profile } = useAuth();

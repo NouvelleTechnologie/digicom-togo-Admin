@@ -6,7 +6,7 @@ import { auth, db, creerCompteAuth } from './firebase.js';
 import { useLive } from './hooks.js';
 import { payerAbonnement, logAction } from './services.js';
 import { ROLES, PLANS, MODES_ABO, COMMISSION_TAUX } from './config.js';
-import { fcfa, dateFr, heureFr, parRecent, messageErreur, toDate } from './utils.js';
+import { fcfa, dateFr, heureFr, parRecent, messageErreur } from './utils.js';
 import Layout, { Onglets } from './layout.js';
 import { Alerte, Chargement, Vide, CarteCommande } from './ui.js';
 function FormAbo({ plan, setPlan, mode, setMode, ref_, setRef }) {
@@ -42,7 +42,7 @@ function Creer() {
         }
         setBusy(false);
     };
-    return (_jsxs("form", { className: "carte", onSubmit: creer, children: [_jsx("h2", { children: "Cr\u00E9er un compte" }), _jsx("label", { children: "Nom complet / boutique" }), _jsx("input", { value: f.nom, onChange: set('nom'), required: true }), _jsx("label", { children: "T\u00E9l\u00E9phone" }), _jsx("input", { type: "tel", value: f.tel, onChange: set('tel'), placeholder: "90 00 00 00" }), _jsx("label", { children: "Email (identifiant)" }), _jsx("input", { type: "email", value: f.email, onChange: set('email'), required: true }), _jsx("label", { children: "Mot de passe (6 caract\u00E8res min.)" }), _jsx("input", { type: "password", autoComplete: "new-password", value: f.mdp, onChange: set('mdp'), minLength: 6, required: true }), _jsx("label", { children: "R\u00F4le" }), _jsx("select", { value: f.role, onChange: set('role'), children: Object.entries(ROLES).map(([k, v]) => _jsx("option", { value: k, children: v }, k)) }), f.role === 'abonne' && _jsx(FormAbo, { plan, setPlan, mode, setMode, ref_, setRef }), _jsx(Alerte, { type: msg.t, children: msg.m }), _jsx("button", { className: "btn plein-l", disabled: busy, children: busy ? 'Création…' : 'Créer le compte' })] }));
+    return (_jsxs("form", { className: "carte", onSubmit: creer, children: [_jsx("h2", { children: "Cr\u00E9er un compte" }), _jsx("label", { children: "Nom complet / boutique" }), _jsx("input", { value: f.nom, onChange: set('nom'), required: true }), _jsx("label", { children: "T\u00E9l\u00E9phone" }), _jsx("input", { type: "tel", value: f.tel, onChange: set('tel'), placeholder: "90 00 00 00" }), _jsx("label", { children: "Email (identifiant)" }), _jsx("input", { type: "email", value: f.email, onChange: set('email'), required: true }), _jsx("label", { children: "Mot de passe (6 caract\u00E8res min.)" }), _jsx("input", { type: "text", value: f.mdp, onChange: set('mdp'), minLength: 6, required: true }), _jsx("label", { children: "R\u00F4le" }), _jsx("select", { value: f.role, onChange: set('role'), children: Object.entries(ROLES).map(([k, v]) => _jsx("option", { value: k, children: v }, k)) }), f.role === 'abonne' && _jsx(FormAbo, { plan, setPlan, mode, setMode, ref_, setRef }), _jsx(Alerte, { type: msg.t, children: msg.m }), _jsx("button", { className: "btn plein-l", disabled: busy, children: busy ? 'Création…' : 'Créer le compte' })] }));
 }
 function Utilisateurs() {
     const users = useLive(() => collection(db, 'users'));
@@ -84,8 +84,7 @@ function Utilisateurs() {
     const liste = users.filter((u) => !filtre || u.role === filtre).sort(parRecent);
     return (_jsxs(_Fragment, { children: [_jsxs("select", { value: filtre, onChange: (e) => setFiltre(e.target.value), children: [_jsxs("option", { value: "", children: ["Tous les r\u00F4les (", users.length, ")"] }), Object.entries(ROLES).map(([k, v]) => _jsx("option", { value: k, children: v }, k))] }), _jsx(Alerte, { type: msg.t, children: msg.m }), !liste.length && _jsx(Vide, { children: "Aucun utilisateur." }), liste.map((u) => {
                 const a = aboDe(u.id);
-                const finAbo = toDate(a?.dateFin);
-                const valide = Boolean(a) && a.actif !== false && Boolean(finAbo) && finAbo.getTime() > Date.now();
+                const valide = a && a.actif !== false && a.dateFin.toMillis() > Date.now();
                 return (_jsxs("div", { className: "carte", children: [_jsxs("div", { className: "ligne", children: [_jsx("b", { children: u.nom }), _jsx("span", { className: 'badge ' + (u.actif === false ? 'ko' : 'ok'), children: u.actif === false ? 'Désactivé' : 'Actif' })] }), _jsxs("small", { className: "gris", children: [ROLES[u.role], " \u00B7 ", u.email, u.tel ? ' · ' + u.tel : ''] }), u.role === 'abonne' && (_jsxs("p", { style: { marginTop: 6 }, children: ["Abonnement :", ' ', a ? _jsxs("span", { className: 'badge ' + (valide ? 'ok' : 'ko'), children: [valide ? 'valide' : 'expiré', " \u00B7 fin ", dateFr(a.dateFin)] }) : _jsx("span", { className: "badge ko", children: "aucun" })] })), _jsxs("div", { className: "actions", children: [_jsx("button", { className: "btn mini gris-b", onClick: () => basculer(u), children: u.actif === false ? 'Réactiver' : 'Désactiver' }), _jsx("button", { className: "btn mini gris-b", onClick: () => mdp(u), children: "Mot de passe" }), u.role === 'abonne' && _jsx("button", { className: "btn mini jaune", onClick: () => setOuvert(ouvert === u.id ? null : u.id), children: "Renouveler" })] }), ouvert === u.id && (_jsxs("div", { children: [_jsx(FormAbo, { plan, setPlan, mode, setMode, ref_, setRef }), _jsx("button", { className: "btn mini", style: { marginTop: 10 }, onClick: () => renouveler(u), children: "Valider le paiement" })] }))] }, u.id));
             })] }));
 }

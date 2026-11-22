@@ -1,9 +1,4 @@
-// ====== 1) CONFIG FIREBASE ======
-// IMPORTANT : l'ancienne version fonctionnelle de DigiCom utilisait la base nommée
-// 'default'. On conserve cet identifiant pour retrouver les comptes et données existants.
-// Ne remplacer par '(default)' que si la console Firebase confirme que les données
-// historiques se trouvent dans la base principale '(default)'.
-export const FIRESTORE_DATABASE_ID = 'default';
+// ====== 1) COLLE ICI TA CONFIG FIREBASE ======
 // Console Firebase > Paramètres du projet > Tes applications > Application Web
 export const firebaseConfig = {
     apiKey: 'AIzaSyDpzrmjg-B1w4auT3IcaqWyiyoGqSWE_8Y',
