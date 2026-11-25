@@ -1,5 +1,4 @@
 import { auth } from './firebase.js';
-//import { genererDescriptionIA, ameliorerImageIA } from './aiClient';
 
 // Une seule URL de référence : celle du service IA Render.
 function apiBase() {

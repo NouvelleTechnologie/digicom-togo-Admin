@@ -56,3 +56,6 @@ export const COMMISSION_TAUX = 10;
 export const STOCK_BAS = 3;
 // Ville ajoutée aux adresses pour l'itinéraire Google Maps
 export const VILLE_DEFAUT = 'Lomé, Togo';
+
+// Rôles autorisés dans l'espace Admin (les comptes Acheteur sont gérés par la plateforme Acheteur indépendante).
+export const ROLES_ADMIN = Object.fromEntries(Object.entries(ROLES).filter(([role]) => role !== 'acheteur'));

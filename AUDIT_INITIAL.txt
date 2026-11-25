@@ -1,0 +1,33 @@
+AUDIT INITIAL — DigiCom_FRONTEND_REPARE.zip
+Date : 25 novembre 2026
+
+SOURCE
+- Archive reçue : DigiCom_FRONTEND_REPARE.zip
+- 34 entrées ; 30 fichiers au niveau du dossier DigiCom_FRONTEND.
+- Interface frontend statique React/JSX runtime + Firebase.
+- Aucun server.js ni package.json backend dans cette archive.
+- Aucun fichier de la plateforme Acheteur autonome n'est présent dans l'archive.
+
+CORRECTIONS EFFECTUÉES DANS CETTE PASSE
+1. Le rôle Acheteur n'est plus proposé lors de la création de comptes depuis Admin.
+2. Les comptes dont le rôle est acheteur sont exclus de la liste de gestion des utilisateurs Admin.
+3. Le formulaire de création propose Abonné par défaut.
+4. L'assistant IA est masqué jusqu'au clic sur « Ouvrir l'assistant IA ».
+5. L'URL Render IA précédemment inscrite dans index.html a été effacée car elle n'a pas été vérifiée et l'utilisateur demande le passage à Gemini.
+6. Documentation mise à jour pour décrire une intégration Gemini future et les exigences de sécurité.
+
+VALIDATION TECHNIQUE EFFECTUÉE
+- node --check réussi sur les 19 fichiers JavaScript présents.
+- Les imports locaux listés dans CONTROLE_REFERENCES.txt sont présents dans l'archive.
+- Ce contrôle est statique ; il ne prouve pas que Firebase, Firestore, les règles de sécurité, le navigateur ou un backend distant fonctionnent en production.
+
+POINTS BLOQUANTS AVANT PRODUCTION
+1. Le backend Gemini n'est pas inclus. Les routes attendues par le frontend sont POST /api/generate-description et POST /api/improve-image.
+2. Le frontend appelle getFirestore(app, 'default'). Il faut confirmer que le backend Firebase Admin utilise exactement la base Firestore nommée « default » et vérifier la structure des documents.
+3. Les opérations critiques Admin écrivent directement dans Firestore depuis le navigateur. La sécurité réelle dépend des règles Firestore et/ou d'un backend d'administration ; les contrôles de rôle côté interface ne suffisent pas.
+4. Il faut inspecter les règles Firestore, Storage, les fonctions de création d'utilisateur, la configuration Render et les variables d'environnement avant de déclarer le système sécurisé.
+5. La clé Gemini doit être uniquement dans les variables privées du backend, jamais dans les fichiers publiés sur GitHub Pages.
+
+SAUVEGARDE
+- Une copie exacte de l'archive reçue a été conservée séparément : DigiCom_FRONTEND_SAUVEGARDE_ORIGINALE.zip.
+- Cette passe n'a modifié ni le dépôt GitHub, ni le site Acheteur, ni les données Firebase.
