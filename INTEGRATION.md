@@ -1,29 +1,34 @@
 # DigiCom — intégration de l'assistant IA
 
 ## Interface fournie
-- L'assistant IA est raccordé au formulaire produit de l'espace Abonné.
-- Il reste masqué jusqu'au clic sur « Ouvrir l'assistant IA ».
+- L'assistant IA est raccordé au formulaire produit de l'espace Abonné (abonne.js).
+- Il reste masqué jusqu'au clic sur « Ouvrir l'assistant IA » ; à l'ouverture, il réveille le serveur IA.
 - La description proposée revient dans le champ Description.
 - La photo améliorée n'est ajoutée au formulaire qu'après validation explicite du vendeur.
+- En cas d'erreur temporaire (serveur saturé, serveur qui démarre), un bouton « Réessayer » apparaît.
+- Si l'attente dépasse 8 secondes, un message explique que le serveur peut mettre jusqu'à une minute.
 
-## Backend Gemini
-Cette archive contient uniquement le frontend. Elle ne contient pas `server.js` ni `package.json` pour le service IA.
-Le frontend attend une API HTTPS aux routes :
-- `POST /api/generate-description`
-- `POST /api/improve-image`
+## Client (aiClient.js)
+- Délai maximal de 90 s par appel, un seul nouvel essai automatique (réseau coupé ou erreur 503).
+- Les erreurs sont de type `ErreurIA` (`status`, `retryable`, `timeout`) ; le message vient du serveur, sans suffixe technique.
+- `reveillerServeurIA()` ping `/api/health` sans bloquer.
 
-Après création, sécurisation et déploiement du backend Gemini, renseigner son URL dans `window.DIGICOM_AI_API_URL` dans `index.html`.
+## Backend IA
+Le backend n'est pas dans cette archive (archive séparée : digicom-ai-corrige.zip, dossier `serveur/`).
+Routes attendues :
+- `POST /api/generate-description`  -> `{ description, fournisseur, modele }`
+- `POST /api/improve-image`         -> `{ imageDataUrl, fournisseur, modele }`
+- `GET  /api/health`
+En cas d'erreur, le serveur renvoie `{ error, retryable }`.
+Les clés (Gemini, et éventuellement Anthropic ou un service compatible OpenAI pour le secours du texte)
+restent exclusivement dans les variables d'environnement du serveur.
 
-La clé `GEMINI_API_KEY` doit rester exclusivement dans les variables d'environnement du serveur. Ne jamais l'ajouter à `config.js`, `index.html`, ni à GitHub Pages.
-
-## Sécurité obligatoire avant ouverture publique
-Le backend doit vérifier le Firebase ID token avec Firebase Admin, lire le profil dans la base Firestore réellement utilisée par l'application, autoriser uniquement le rôle `abonne` actif avec abonnement valide, appliquer des quotas et une limitation de débit, limiter la taille et le type des images et restreindre CORS aux origines prévues.
-
-Les règles Firestore doivent empêcher un vendeur de lire ou modifier les données d'un autre vendeur. Le frontend seul ne constitue jamais une barrière de sécurité.
+## Sécurité (inchangé)
+Le backend vérifie le Firebase ID token, le rôle `abonne` actif et l'abonnement valide, applique quotas
+et limitation de débit, limite taille/type des images et restreint CORS. Les règles Firestore doivent
+empêcher un vendeur de lire ou modifier les données d'un autre vendeur : le frontend seul n'est jamais une barrière.
 
 ## À vérifier sur le projet réel
-- Identifiant exact de la base Firestore : le frontend appelle `getFirestore(app, 'default')`; le backend devra utiliser exactement la même base.
-- Structure réelle des documents `users` et `abonnements`, notamment le champ `dateFin`.
+- Base Firestore nommée « default » (frontend : getFirestore(app, 'default'), serveur : FIRESTORE_DATABASE_ID).
+- Structure des documents `users` et `abonnements` (champ `dateFin`).
 - Règles Firestore et stockage des images.
-- Compte Abonné actif et compte expiré.
-- Tests depuis GitHub Pages et mobile Android.

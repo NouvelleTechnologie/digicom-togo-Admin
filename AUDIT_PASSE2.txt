@@ -1,0 +1,16 @@
+AUDIT — PASSE 2 (assistant IA)
+
+CAUSES IDENTIFIÉES
+1. Gemini renvoyait 503 (modèle en forte demande) ; l'ancien serveur le transformait en 502 « vérifiez la clé API »,
+   et l'ancien aiClient.js ajoutait « [HTTP 502] » : message trompeur, aucune nouvelle tentative.
+2. Aucun délai maximal côté client : avec l'instance gratuite Render endormie, le bouton pouvait rester sur
+   « Amélioration en cours… » très longtemps.
+3. DigiComAssistantIA.js : un seul effet libérait les deux URL d'aperçu ; l'image « Originale » devenait invalide
+   dès l'arrivée du résultat, et la miniature transmise au formulaire était révoquée à la fermeture de l'assistant.
+4. L'URL du serveur IA est vide dans index.html (voir LISEZ-MOI.txt) : à renseigner avant publication.
+
+CORRECTIONS (frontend) : aiClient.js, DigiComAssistantIA.js, sw.js (cache v3), documentation.
+CORRECTIONS (serveur) : voir digicom-ai-corrige.zip (réessai, modèles et fournisseurs de secours, erreurs justes).
+
+VALIDATION : syntaxe JS (19 fichiers) ; aiClient.js testé avec faux serveur (7 scénarios) ;
+moteur serveur testé avec 11 scénarios simulés. Non vérifié : exécution réelle dans un navigateur, Firebase, Render, vraies clés IA.

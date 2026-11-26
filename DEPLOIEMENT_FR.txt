@@ -4,21 +4,22 @@ Tous les fichiers sont à la racine de cette archive : aucun sous-dossier applic
 
 FRONTEND STATIQUE
 - Publier les fichiers de cette archive sur un hébergement statique (GitHub Pages ou Netlify).
-- Le point d’entrée est index.html. La navigation utilise HashRouter, adaptée à l’hébergement statique.
+- Le point d'entrée est index.html. La navigation utilise HashRouter, adaptée à l'hébergement statique.
 - Les bibliothèques React et Firebase sont chargées via importmap/CDN. Une connexion Internet est requise.
-- La configuration Firebase actuelle est dans config.js. Vérifiez dans Firebase Console que les domaines d’hébergement sont autorisés et que les règles Firestore/Storage protègent les données.
+- La configuration Firebase actuelle est dans config.js. Vérifiez dans Firebase Console que les domaines d'hébergement sont autorisés et que les règles Firestore/Storage protègent les données.
+- Le cache du service worker a été renouvelé (digicom-pro-v3) : les utilisateurs récupèrent la nouvelle version au prochain chargement.
 
-SERVICE IA (OPTIONNEL, SERVEUR SÉPARÉ)
-- server.js est un backend Node/Express séparé; l’hébergement statique ne l’exécute pas.
-- Pour l’API IA, déployer ce fichier sur un hébergeur Node, configurer OPENAI_API_KEY et FRONTEND_ORIGIN côté serveur, puis renseigner l’URL HTTPS de l’API dans index.html (window.DIGICOM_AI_API_URL).
-- Ne jamais mettre la clé OpenAI dans les fichiers frontend ni dans GitHub.
-- AVANT exposition publique, ajouter vérification Firebase ID token, autorisation par rôle/abonnement, quotas et limitation de débit. Le backend inclus est un exemple et ne doit pas être exposé publiquement sans ces protections.
+SERVICE IA (SERVEUR SÉPARÉ, NON INCLUS ICI)
+- Le service IA est un backend Node/Express hébergé sur Render (archive digicom-ai-corrige.zip, dossier serveur/).
+- Renseigner l'URL HTTPS de ce service dans index.html (window.DIGICOM_AI_API_URL) AVANT de publier le frontend.
+- Variables du serveur : voir serveur/.env.example (GEMINI_API_KEY, FIREBASE_*, FRONTEND_ORIGIN, secours facultatifs).
+- Ne jamais mettre une clé API dans les fichiers frontend ni dans GitHub.
 
-CONTRÔLES EFFECTUÉS
-- Imports locaux relatifs vérifiés : aucun fichier local manquant détecté.
-- Références CSS, favicon et script principal vérifiées.
-- Syntaxe JavaScript vérifiée avec node --check.
+CONTRÔLES EFFECTUÉS (passe 2)
+- Syntaxe JavaScript vérifiée sur les 19 fichiers .js.
+- aiClient.js testé avec un faux serveur : succès, 503 puis succès, 503 répété, 429, 403, réseau coupé, délai dépassé.
+- Le composant React DigiComAssistantIA.js n'a pas pu être exécuté ici : sa syntaxe est vérifiée, mais il doit être testé dans le navigateur.
 
 LIMITES
-- Ce paquet est une base de déploiement; il ne constitue pas une preuve que Firebase Auth/Firestore est configuré correctement en production.
-- Les fonctions qui nécessitent des règles Firebase, comptes, autorisations ou secrets doivent être testées sur le projet réel avant utilisation publique.
+- Ce paquet ne prouve pas que Firebase Auth/Firestore est configuré correctement en production.
+- Les fonctions qui nécessitent des règles Firebase, comptes, autorisations ou secrets doivent être testées sur le projet réel.

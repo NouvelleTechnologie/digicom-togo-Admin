@@ -1,4 +1,4 @@
-const CACHE = 'digicom-pro-v2';
+const CACHE = 'digicom-pro-v3';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

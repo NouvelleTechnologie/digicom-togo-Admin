@@ -1,12 +1,17 @@
-DIGICOM — ARCHIVE INTÉGRÉE
+DIGICOM — ARCHIVE FRONTEND (passe 2 : assistant IA fiabilisé)
 
 Les fichiers sont tous à la racine, sans sous-dossiers.
-L’assistant IA est maintenant raccordé au formulaire d’ajout/modification de produit dans abonne.js.
-La génération et l’amélioration réelles nécessitent un serveur Node.js externe avec clé API secrète.
+L'assistant IA est raccordé au formulaire d'ajout/modification de produit dans abonne.js.
+La génération et l'amélioration réelles nécessitent le serveur Node.js IA (Render) avec clés secrètes.
 
-À faire avant production :
-1) Déployer et sécuriser le backend IA (Firebase ID token, rôle/abonnement, quotas, limitation de débit).
-2) Mettre l’URL HTTPS du backend dans window.DIGICOM_AI_API_URL dans index.html.
-3) Tester l’enregistrement réel d’une photo IA et la sécurité Firestore.
+A FAIRE AVANT DE PUBLIER CETTE ARCHIVE (important) :
+1) Renseigner l'URL HTTPS du serveur IA dans index.html :
+   window.DIGICOM_AI_API_URL = "https://VOTRE-SERVICE.onrender.com";
+   (elle est volontairement vide dans cette archive : sans elle, l'assistant affiche
+   « Adresse HTTPS du serveur IA absente »).
+2) Déployer le serveur IA corrigé (archive digicom-ai-corrige.zip, dossier serveur/).
+3) Dans Render, FRONTEND_ORIGIN doit être exactement l'adresse du site (ex. https://nouvelletechnologie.github.io).
+4) Tester sur téléphone : description, photo, compte abonné actif et compte expiré.
 
-Ne publiez jamais OPENAI_API_KEY dans GitHub ou dans le frontend.
+Ne publiez jamais une clé API (Gemini, Anthropic, OpenAI...) dans GitHub ou dans le frontend.
+La configuration Firebase web de config.js est publique par conception ; sa protection repose sur les règles Firestore/Storage.
